@@ -64,7 +64,7 @@
     </div>
     <!-- Dropdowns for property /properties -->
     <div class="select col-sm-9" style="margin: 5px;">
-      <ng-multiselect-dropdown (click)="tableActive=false"
+      <ng-multiselect-dropdown (click)="tableActive=false;specialtableActive=false;cumulativetableActive=false"
         [placeholder]="rowIndex?'Select Parameter':'Select Parameters'"
         [data]="parameters[rowIndex]"
         [(ngModel)]="selectedparameter[rowIndex]"
@@ -79,9 +79,9 @@
     <span class="button">
       <button type="submit" class="btn btn-info" (click)="generateReport(false,'')" *ngIf="rowIndex==0" style="margin: 5px;">Visualise Data</button>
       <select class="btn btn-info" (click)="generateReport(true,button)" style="margin: 5px;" [(ngModel)]="button" name="report">
-          <option [value]="'report'">Generate Report</option>
-          <option [value]="'cumulativereport'">Cumulative Report</option>
-          <option [value]="'specialreport'">Generate Special Report</option>
+          <option [value]="'report'">Generate Individual Reports</option>
+          <option [value]="'cumulativereport'">Generate Combined Report</option>
+          <option [value]="'specialreport'">Sales Report</option>
       </select>
     </span>
     </div>
@@ -103,7 +103,7 @@
               </span>
               <div id="{{id}}">
                 <!-- Table -->
-                <table class="table table-striped text-center" id = "{{id}}dt">
+                <table class="table table-striped text-center" id = "{{id}}dt" style="margin-bottom: 0px">
                   <thead class="thead-dark">
                     <tr>
                       <th>{{timeFormat}}</th>
@@ -113,7 +113,7 @@
                   <tbody >
                     <tr *ngFor="let info of timeFormatedData[id];let rowIndex=index">
                       <td>{{info["date"]}}</td>
-                      <td *ngFor="let data of selectedparameter[0]">{{info[data.name].toFixed(2)}}</td>
+                      <td *ngFor="let data of selectedparameter[0]">{{info[data.name]?info[data.name]:0}}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -150,12 +150,12 @@
     <div class="page-header">
         <span class="heading">
             <h3>
-              Cumulative Results
+              Combined Report
               </h3>
         </span>
         <div id="cumulativereport">
           <!-- Table -->
-          <table class="table table-striped text-center" id="">
+          <table class="table table-striped text-center" id="combined">
             <thead class="thead-dark">
               <tr>
                 <th>Machine Id</th>
@@ -164,8 +164,8 @@
             </thead>
             <tbody >
               <tr *ngFor="let id of selectedIds;let rowIndex=index">
-                <td>{{id}}</td>
-                <td *ngFor="let data of selectedparameter[0]">{{getCumulativeData(id,data)}}</td>
+                <td>{{location[id]}}:<br>{{id}}</td>
+                <td *ngFor="let data of selectedparameter[0]">{{getCumulativeData(id,data)?getCumulativeData(id,data):0}}</td>
               </tr>
             </tbody>
           </table>

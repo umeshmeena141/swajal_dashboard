@@ -27,7 +27,7 @@
                 <label><span class="pad"> To:</span><input id="date_to" type="date" name="to" [(ngModel)]="toDate"></label> 
             </div>
             <div class="pad">
-                <button type="submit" class="btn btn-info" (click)="getInfo()">Analyse</button>                        
+                <button type="submit" class="btn btn-info" (click)="getInfo();dataAvailable1=false">Analyse</button>                        
             </div>
         </div>
     </div>
@@ -47,7 +47,7 @@
                     </tr>
                 </thead>
                 <tbody class="text-center">
-                    <tr *ngFor="let row of chunks[chunkIndex]">
+                    <tr *ngFor="let row of info">
                     <td *ngFor= "let td of data[0]">
                         {{row[td]}}
                     </td>
@@ -55,8 +55,8 @@
                 </tbody>
             </table>
         </div>
-        <span style="display: flex; justify-content: center">
+        <!-- <span style="display: flex; justify-content: center">
             <h6 (click)="chunkIndex=chunkIndex-1;dataAvailable1=false;chunkChange()">Previous</h6><h6 (click)="chunkIndex=chunkIndex+1;dataAvailable1=false;chunkChange()">Next</h6>
-        </span>
+        </span> -->
     </div>
 </div>

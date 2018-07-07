@@ -13,11 +13,13 @@ export class ErrorComponent implements OnInit {
   id = [];
   location : string = this.cookieService.get('location');
   place : string = '404 #Not_Found';
+  machineNo:string;
   constructor(private cookieService:CookieService, private route: ActivatedRoute) {
     this.id[0] = route.snapshot.paramMap.get('id'); 
    }
 
   ngOnInit() {
+    this.machineNo= this.cookieService.get('machineNo');
   }
 
 }

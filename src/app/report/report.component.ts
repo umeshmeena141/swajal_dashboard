@@ -34,6 +34,7 @@ export class ReportComponent {
   cumulativetableActive:boolean;
   chartsActive=[false,false];
   selectedIds=[]; // Ids which are selected from dropdown
+  location=[];
   info =[];
   dataAvailable : boolean;
   dates =[];
@@ -126,6 +127,10 @@ generateReport(onlyreport,button){
         })
       } 
     }
+      if(onlyreport && button=='specialreport'){
+        this.selectedparameter[0]=[];
+        this.selectedparameter[0].push({name:'Total_Volume_Dispensed',title:'Total Water Dispensed',unit:'L'},{name:'Total_Collection_Sale',title:'Total Sale',unit:'Rs'},{name:'TotalCupsDispensed',title:'Total Cups Dispensed',unit:""})
+      }    
       // calls setChartData function to do calculation on data obtained
       this.setChartData(this.selectedparameter[0],2);
       // if report button is clicked show only reports, else show charts
@@ -134,10 +139,12 @@ generateReport(onlyreport,button){
         if(button=='report'){
           this.tableActive= true;
           this.specialtableActive=false ;
+          this.cumulativetableActive=false;
+          this.getDateDiff();
+          
           for(let id of this.selectedIds){
             setTimeout(()=>{
               $(document).ready(function(){
-                console.log('#'+id+'dt')
                 $('#'+id+'dt').DataTable({
                   scrollX: true,
                   retrieve: true,
@@ -153,10 +160,9 @@ generateReport(onlyreport,button){
         }
         else if (button=='specialreport'){
           this.tableActive= false;
-          console.log(this.from,this.to,'daterange')
           this.generate_head_body(this.tableData,this.selectedIds,this.from,this.to);
           this.specialtableActive=true;
-        
+          this.cumulativetableActive=false;
         setTimeout(()=>{
           $(document).ready(function(){
             $('#table').DataTable({
@@ -181,6 +187,24 @@ generateReport(onlyreport,button){
         this.tableActive= false;
         this.specialtableActive=false ;
         this.cumulativetableActive=true;
+        
+        setTimeout(()=>{
+          $(document).ready(function(){
+            $('#combined').DataTable({
+              retrieve: true,
+              dom: 'Bfrtip',
+              buttons: [
+                {
+                  extend: 'excelHtml5',
+                  text: 'Save as Excel',
+                  
+              },
+              'print']
+            });
+
+
+          })
+        },2000)
       }
       $('html').css({"height":"auto"});
     }
@@ -196,6 +220,7 @@ getIds(){
   this.service.getIds('',this.cluster,'').subscribe(ids=>this.ids=ids,(err)=>this.ids=[],()=>{
   this.ids.forEach(element => {
     element['dropdownText']= element.Location +" : ("+element.DeviceID+")";
+    this.location[element.DeviceID]=element.Location;
   });
   this.isActive=true;                     
   });
@@ -249,12 +274,14 @@ setChartData(item : any,chart){
         this.chartData[1]=[this.selectedIds,this.polarchartData,element[0].unit,'polarArea'];
         this.chartsActive[1]=true;
       }
+      
       // sets bubble chart data with units
       this.unit=[];
       for(var parameter of this.selectedparameter[0]){
         // if textfield and id field is same, parameter will no longer be a object so if else condition
+        
         if(parameter.name){
-        this.bubblechartData[id][parameter.name]=(extend.reduce((sum,element)=>sum +parseFloat(element[parameter.name]),0));
+          this.bubblechartData[id][parameter.name]=(extend.reduce((sum,element)=>sum +parseFloat(element[parameter.name]),0));
           this.unit.push(this.parameters[0].filter(function(element){
             return (element.name==parameter.name)
           })[0].unit)
@@ -285,12 +312,16 @@ emptyChartData(){
   this.parameters[1]=[];
   this.selectedparameter[1]=[];
   this.tableActive=false;
+  this.specialtableActive=false;
+  this.cumulativetableActive=false;
 }
 // on selecting push element in selected parameter array and charts & tables should become invisible in case of changing properties
 onItemSelect(item:any){
   this.selectedIds.push(item.DeviceID);
   this.selectedparameter[0]=[];
   this.tableActive=false;
+  this.specialtableActive=false;
+  this.cumulativetableActive=false;
   this.chartsActive=[false,false];
 }
 // on deselecting pop element in selected parameter array  and chart & tables should become invisible in case of changing properties
@@ -301,13 +332,17 @@ onDeSelect(item:any){
     return element !== item.DeviceID
 })
 this.tableActive=false;
+this.specialtableActive=false;
+this.cumulativetableActive=false;
 }
 // on selecting push all elements in selected parameter array
 onSelectAll(item:any){
   this.selectedIds=[];
   this.selectedparameter[0]=[]; 
   this.chartsActive=[false,false];   
-  this.tableActive=false;   
+  this.tableActive=false; 
+  this.specialtableActive=false;
+  this.cumulativetableActive=false;  
   item.forEach(element => {
       return this.selectedIds.push(element.DeviceID);
   });;
@@ -318,6 +353,8 @@ onDeSelectAll(item:any){
   this.chartsActive=[false,false];        
   this.selectedIds=[];
   this.tableActive=false; 
+  this.specialtableActive=false;
+  this.cumulativetableActive=false;
 }
 
 
@@ -333,12 +370,22 @@ getSale(i){
 getCumulativeData(id,property){
   let sum=0;
   for(let row of this.tableData[id]){
-    console.log(property.name.indexOf('total'));
-    if(property.name.toLowerCase().indexOf('total')!=-1){
-      sum=sum+parseInt(row[property.name]);
+    // console.log(property.name.indexOf('total'));
+    if(property.name){
+      if(property.name.toLowerCase().indexOf('total')!=-1){
+        sum=sum+parseInt(row[property.name]);
+      }
+      else{
+        sum=row[property.name];
+      }
     }
     else{
-      sum=row[property.name];
+      if(property.toLowerCase().indexOf('total')!=-1){
+        sum=sum+parseInt(row[property]);
+      }
+      else{
+        sum=row[property];
+      }
     }
   }
   return sum;
@@ -647,7 +694,7 @@ getDataTimewise(format){
     this.head1.push("");
     for( var i =0; i< id_length; i++){
       this.head1.push(ids[i]);
-      this.head1.push("");
+      this.head1.push('('+this.location[ids[i]]+')');
       this.head1.push("");
     }
     this.head1.push("");
@@ -699,7 +746,6 @@ getDataTimewise(format){
         // console.log(date_indexed_Data[ids[j]],currDateStr,'here');
         table_row.push(date_indexed_Data[ids[j]][currDateStr]?(date_indexed_Data[ids[j]][currDateStr]['Total_Collection_Sale']?date_indexed_Data[ids[j]][currDateStr]['Total_Collection_Sale']:0):0);
         total_sale+=parseFloat(date_indexed_Data[ids[j]][currDateStr]?(date_indexed_Data[ids[j]][currDateStr]['Total_Collection_Sale']?date_indexed_Data[ids[j]][currDateStr]['Total_Collection_Sale']:0):0);
-        console.log(date_indexed_Data[ids[j]][currDateStr]?(date_indexed_Data[ids[j]][currDateStr]['Total_Collection_Sale']?date_indexed_Data[ids[j]][currDateStr]['Total_Collection_Sale']:0):0,total_sale,'debug');
 
         table_row.push(parseInt(date_indexed_Data[ids[j]][currDateStr]?(date_indexed_Data[ids[j]][currDateStr]['TotalCupsDispensed']?date_indexed_Data[ids[j]][currDateStr]['TotalCupsDispensed']:0):0));
         table_row.push(parseInt(date_indexed_Data[ids[j]][currDateStr]?(date_indexed_Data[ids[j]][currDateStr]['Total_Volume_Dispensed']?date_indexed_Data[ids[j]][currDateStr]['Total_Volume_Dispensed']:0):0));

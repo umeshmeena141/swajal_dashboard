@@ -80,7 +80,7 @@ export class TransactionComponent implements OnInit {
       document.getElementById('options')["options"][0].selected = true; // Setting select parameter to first option 
     },1000)
   }
-  // css Changes for table
+  // css Changes for tablea
   ngAfterContentChecked(){
     $('.paginate_button').css({"padding":"10px"});
     $('#table_filter').css({"display":"inline-block","float":"right"});
@@ -117,31 +117,30 @@ export class TransactionComponent implements OnInit {
       this.chunks.push(temp);
       
     // Show and hide of table data
-      this.dataAvailable1 = false;
-
+      setTimeout(()=>{
+        // Defining certain values according to thier values
+        if(this.property1 !== '00'){
+          this.param_name = this.trans_params[0][this.property1];
+        }
+        else{
+        this.param_name = "Machine Restart";
+        }
+        // Show and hide of table data
+        this.dataAvailable1 =true;
+        $(document).ready(function(){
+          $('#table').DataTable({
+            retrieve: true,
+            "ordering": false,
+            dom: 'Bfrtip',
+            buttons: ['csv', 'excel','print']
+          })
+          $('.paginate_button').css({"padding":"10px","border":"none"});
+          $('.fas').css({"padding-left":"10px"});
+        })
+      },1000)
     });
 
-    setTimeout(()=>{
-      // Defining certain values according to thier values
-      if(this.property1 !== '00'){
-        this.param_name = this.trans_params[0][this.property1];
-      }
-      else{
-      this.param_name = "Machine Restart";
-      }
-      // Show and hide of table data
-      this.dataAvailable1 =true;
-      $(document).ready(function(){
-        $('#table').DataTable({
-          retrieve: true,
-          "ordering": false,
-          dom: 'Bfrtip',
-          buttons: ['csv', 'excel','print']
-        })
-        $('.paginate_button').css({"padding":"10px","border":"none"});
-        $('.fas').css({"padding-left":"10px"});
-      })
-    },1000)
+
   }
   chunkChange(){
     if(this.chunkIndex>this.chunks.length-1){
